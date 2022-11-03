@@ -1,0 +1,21 @@
+Metadata-Version: 1.2
+Name: pynr
+Version: 0.1.0
+Summary: Code to load the data from NR catalogues
+Home-page: http://www.pycbc.org/
+Author: Xisco Jimenez Forteza
+Author-email: francisco.jimenez.forteza@aei.mpg.de
+License: UNKNOWN
+Download-URL: https://github.com/frcojimenez
+Description: UNKNOWN
+Keywords: nr data,signal processing,gravitational waves
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Astronomy
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Requires-Python: >=3.7.3
