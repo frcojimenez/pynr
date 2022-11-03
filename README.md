@@ -3,7 +3,7 @@ Provides simple to call functions to get the waveforms from the RIT and SXS cata
 
 ## Installation
 
-You can also install from source by cloning the repository at https://github.com/frcojimenez/pynr. Required packages are listed in the `requirements.txt` file, which you can install by running `pip install -r requirements.txt` from within the source code directory, followed by `python setup.py install`. Install  `pip install -r requirements-optional.txt` if you want your code to run in the same format as the pycbc code (https://github.com/gwastro/pycbc). 
+You can also install from source by cloning the repository at https://github.com/frcojimenez/pynr. Required packages are listed in the `requirements.txt` file, which you can install by running `pip install -r requirements.txt` from within the source code directory, followed by `python setup.py install`. Install  `pip install -r optional-requirements.txt` if you want your code to run in the same format as the pycbc code (https://github.com/gwastro/pycbc). 
 
 ## Examples
 
