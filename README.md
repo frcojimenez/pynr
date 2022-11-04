@@ -1,5 +1,5 @@
 # pynr
-Provides simple to call functions to get the waveforms from the RIT and SXS catalogues. The code is able to read the data directly from the catalogue websites and from your local computed. Options to load the modes individually are provided.
+Provides simple to call functions to get the waveforms from the RIT, SXS and MAYA catalogues. The code is able to read the data directly from the catalogue websites and from your local computed. Options to load the modes individually are provided.
 
 ## Installation
 
