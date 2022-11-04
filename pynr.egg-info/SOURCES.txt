@@ -1,7 +1,0 @@
-README.md
-setup.py
-pynr.egg-info/PKG-INFO
-pynr.egg-info/SOURCES.txt
-pynr.egg-info/dependency_links.txt
-pynr.egg-info/requires.txt
-pynr.egg-info/top_level.txt
