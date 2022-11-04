@@ -44,8 +44,8 @@ def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],
     
         Parameters
     ----------
-    code: {'SXS','RIT'}. Select the catalogue you want the data from.
-    tag: eg. {'SXS:BBH:0305','RIT-BBH-0001'}. Tag of the target waveform.
+    code: {'SXS','RIT','MAYA'}. Select the catalogue you want the data from.
+    tag: eg. {'SXS:BBH:0305','RIT-BBH-0001','GT0001'}. Tag of the target waveform.
     download_Q: logical, optional, Default = True. If True downloads the data from the catalogue url.
     root_folder: string, optional, Default = None. If download_Q = False, it must be provided.
     pycbc_format: logical, optional, Default=True. If True it provides hp, hc in the Timeseries format.
