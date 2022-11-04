@@ -509,8 +509,14 @@ def select_cases(cases,regexp):
 # this function will be used to select the data in terms of the physical parameters
 def SXS_Catalogue_Select_cases(sxs_root_folder,select_patterns,tolerance=0.001,sortcolumn=2,best_resolution=True,verbose=False):
     '''Function used to select a subdomain of the sxs catalogue stored at sxs_root_folder. 
-       Some example select_patterns keywords are [['BHBH',None],['Non-Precessing',None],['Massratio',[>=1,<=10],
-       ['Spin-eff',['>=-0.5','<=0.5']],['Remnant-Spin', ['>=0.1','<=0.5']],['Remnant-Mass', ['>=0.88','<=0.97']],['Eccentricity',['>=0.01','<=0.5']]] 
+       Some example select_patterns keywords are:
+       [['BHBH',None],
+       ['Non-Precessing',None],
+       ['Massratio',[>=1,<=10],
+       ['Spin-eff',['>=-0.5','<=0.5']],
+       ['Remnant-Spin', ['>=0.1','<=0.5']],
+       ['Remnant-Mass', ['>=0.88','<=0.97']],[
+       'Eccentricity',['>=0.01','<=0.5']]] 
     '''
     # find metadata files. If best_resolution = True, it takes the best resolution. Otherwise, it will consider all the resolutions available.
     if best_resolution==-1:
