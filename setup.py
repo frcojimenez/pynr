@@ -1,7 +1,5 @@
 
-from setuptools import Extension, setup, Command
 import setuptools
-
 
 with open("pynr/_version.py", "r") as fh:
     vstr = fh.read().strip()
@@ -15,12 +13,11 @@ setuptools.setup (
     long_description = open('README.md').read(),
     author = 'Xisco Jimenez Forteza',
     author_email = 'francisco.jimenez.forteza@aei.mpg.de',
-    url = 'http://www.pycbc.org/',
+    url = 'https://sites.google.com/view/xiscojimenez/',
     download_url = 'https://github.com/frcojimenez',
     packages=setuptools.find_packages(),
     install_requires=['numpy', 'scipy', 'h5py','glob2','jsons','sympy','lalsuite','sxs','romspline'],
     keywords = ['nr data', 'signal processing', 'gravitational waves'],
-    py_modules = ['pynr','util'],
     classifiers=[
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',

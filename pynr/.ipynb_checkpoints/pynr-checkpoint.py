@@ -34,26 +34,61 @@ import h5py
 from scipy.interpolate import interp1d
 import sxs
 import romspline
-import util as ut
+import pynr.util as ut
 
-def nr_waveform(**args):
+def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],[2,-2]],
+                distance=100, inclination=0,coa_phase=0,modes_combined=True,tapering=True,RD=False,
+                zero_align=True,extrapolation_order=2,resolution_level=-1, **args):
     '''
-    Function to find and load the SXS NR strain waveforms. 
-    The following inputs must be provided:
-    'sxs_root_folder': root folder where SXS data is stored.
-    'tag': SXS waveform tag. If the SXS data is stored in your local machine, it must correspond to the folder name of each simulation. In case you want to directly download the data, the tag must be in the following format: SXS_BBH_####.
-    'resolution': Resolution level wanted for this waveform. -1 stands for the highest resolution and 1 for the lowest.
-    'extrapolation_order': extrapolation order desired. 
+    Function to load the waveforms from the NR catalogues. 
+    
+        Parameters
+    ----------
+    code: {'SXS','RIT'}. Select the catalogue you want the data from.
+    tag: eg. {'SXS:BBH:0305','RIT-BBH-0001'}. Tag of the target waveform.
+    download_Q: logical, optional, Default = True. If True downloads the data from the catalogue url.
+    root_folder: string, optional, Default = None. If download_Q = False, it must be provided.
+    pycbc_format: logical, optional, Default=True. If True it provides hp, hc in the Timeseries format.
+    
+    mass: Total mass in solar masses. 
+    modes: list of modes, optional, Default= [[2,2],[2,-2]].
+    distance: Distance, optional, Default = 100 Mpc.
+    inclination: Inclination, optional, Default = 0.
+    coa_phase: Coalescense phase, optional, Default = 0.
+    
+    modes_combined: list, optional, Default = True. If False it splits the list of individual modes.
+    delta_t: time sampling. 
+    tapering: logical, optional, Default = True. If True it applies a Tanh tappering function at the initial and ending points of the data.
+    RD: logical, optional, Default= False. If True it provides the ringdown part.
+    zero_align: logical, optional, Default= True. If True it aligns the waveform such that the peak of the strain is at t=0.   
+    
+    -- Applied for the SXS data.
+    extrapolation_order: int, {2,3,4}, Default=2. SXS extrapolation order.
+    resolution_level: int, {1,2,...}, Default = -1. It takes by default the best resolution available.
+
+    
+    Returns
+    -------
+    hplus: The plus polarization of the waveform.
+    hcross: The cross polarization of the waveform.
     
     '''
+    
     if args['code'] == 'SXS':
-        hp,hc = sxs_waveform(**args) 
+        hp,hc = sxs_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
+                distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
+                zero_align=zero_align,extrapolation_order=extrapolation_order,resolution_level=resolution_level, **args) 
     elif args['code'] == 'RIT':
-        hp,hc = rit_waveform(**args) 
+        print
+        hp,hc = rit_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
+                distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
+                zero_align=zero_align,**args) 
     elif  args['code'] == 'MAYA':
-        hp,hc = maya_waveform_1(**args) 
+        hp,hc = maya_waveform_1(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],[2,-2]],
+                distance=100, inclination=0,coa_phase=0,modes_combined=True,tapering=True,RD=False,
+                zero_align=True,extrapolation_order=2,resolution_level=-1,**args) 
     else:
-        print('Code not recgonised')
+        print('Catalogue not recognised')
         return
     
     return hp,hc
@@ -80,7 +115,7 @@ def sxs_waveform(**args):
         h5file=sorted(glob.glob(home+"/.cache/sxs/"+sxs_tag+"*/**/rhOverM_Asymptotic_GeometricUnits_CoM.h5",recursive = True))[resolution_level]
     
     else:
-        sxs_root_folder = args['sxs_root_folder']   
+        sxs_root_folder = args['root_folder']   
         sxs_resolutions = sorted(glob.glob(sxs_root_folder+"/"+sxs_tag.replace(":","_")+"/*"))
         res_length = len(sxs_resolutions)
         resolution_level = args['resolution_level']
@@ -126,15 +161,6 @@ def sxs_waveform(**args):
     
 
 def rit_waveform(**args):
-    '''
-    Function to find and load the SXS NR strain waveforms. 
-    The following inputs must be provided:
-    'sxs_root_folder': root folder where SXS data is stored.
-    'tag': SXS waveform tag. If the SXS data is stored in your local machine, it must correspond to the folder name of each simulation. In case you want to directly download the data, the tag must be in the following format: SXS_BBH_####.
-    'resolution': Resolution level wanted for this waveform. -1 stands for the highest resolution and 1 for the lowest.
-    'extrapolation_order': extrapolation order desired. 
-    
-    '''
     
     download_Q = args['download_Q']
     rit_tag = args['tag']
@@ -175,7 +201,7 @@ def rit_waveform(**args):
         h5file=export_user+rit_tag+'.h5'
 
     else:
-        rit_root_folder = args['rit_root_folder']   
+        rit_root_folder = args['root_folder']   
         rit_resolutions = sorted(glob.glob(rit_root_folder+"/*"+rit_tag.replace(":","-")+"*"))
         rit_case = rit_resolutions[-1]
         h5file=rit_case
