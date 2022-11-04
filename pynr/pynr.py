@@ -79,14 +79,13 @@ def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],
                 distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
                 zero_align=zero_align,extrapolation_order=extrapolation_order,resolution_level=resolution_level, **args) 
     elif args['code'] == 'RIT':
-        print
         hp,hc = rit_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
                 distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
                 zero_align=zero_align,**args) 
     elif  args['code'] == 'MAYA':
-        hp,hc = maya_waveform_1(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],[2,-2]],
-                distance=100, inclination=0,coa_phase=0,modes_combined=True,tapering=True,RD=False,
-                zero_align=True,extrapolation_order=2,resolution_level=-1,**args) 
+        hp,hc = maya_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
+                distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
+                zero_align=zero_align,**args) 
     else:
         print('Catalogue not recognised')
         return
@@ -138,8 +137,8 @@ def sxs_waveform(**args):
         tlow = 1000
     
     if tapering: 
-        hwave = Window_Tanh(hwave,hwave[0,0]+tlow,1000,150,100)
-        hwave = ZeroPadTimeSeries(hwave,10000,1000)    
+        hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
+        hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
     
     times = ut.time_to_t_Phys(hwave[:,0].real,mass)
     wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
@@ -209,9 +208,9 @@ def rit_waveform(**args):
     sampling=ut.time_to_t_NR(delta_t,mass)
     if modes_combined:
         print("Extracting and combining modes");
-        hwave = Generate_RIT_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
+        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
     else:
-        hwave = Generate_RIT_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)[0]
+        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)[0]
     
     if RD:
         boolean = hwave[:,0]>= 0
@@ -221,8 +220,8 @@ def rit_waveform(**args):
         tlow = 1000
     
     if tapering: 
-        hwave = Window_Tanh(hwave,hwave[0,0]+tlow,1000,150,100)
-        hwave = ZeroPadTimeSeries(hwave,10000,1000)    
+        hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
+        hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
     
     times = ut.time_to_t_Phys(hwave[:,0].real,mass)
     wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
@@ -240,6 +239,78 @@ def rit_waveform(**args):
 
     return hp, hc
 
+
+def maya_waveform(**args):
+    
+    download_Q = args['download_Q']
+    maya_tag = args['tag']
+    modes  = args['modes']
+    mass  = args['mass']
+    distance  = args['distance']
+    inclination = args['inclination']
+    coa_phase = args['coa_phase']
+    modes_combined = args['modes_combined']
+    delta_t = args['delta_t']
+    tapering = args['tapering']
+    RD = args['RD']
+    zero_align = args['zero_align']     
+    
+    maya_tag=maya_tag.replace(':','')
+    maya_tag=maya_tag.replace('-','')
+
+    if download_Q:
+        from urllib.request import urlopen
+        from bs4 import BeautifulSoup
+        import ssl
+        import re
+        import urllib
+
+        context = ssl._create_unverified_context()
+        URL = "https://github.com/cevans216/gt-waveform-catalog/raw/master/h5files/"
+        export_user=os.path.expanduser('~/.cache/')
+        ssl._create_default_https_context = ssl._create_unverified_context
+        response=urllib.request.urlretrieve(URL+maya_tag+'.h5',export_user+maya_tag+'.h5')   
+        h5file=export_user+maya_tag+'.h5'
+
+    else:
+        maya_root_folder = args['root_folder']   
+        maya_resolutions = sorted(glob.glob(maya_resolutions+"/*"+maya_tag.replace(":","-")+"*"))
+        maya_case = maya_resolutions[-1]
+        h5file=maya_case
+    
+    sampling=ut.time_to_t_NR(delta_t,mass)
+    if modes_combined:
+        print("Extracting and combining modes");
+        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
+    else:
+        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)[0]
+    
+    if RD:
+        boolean = hwave[:,0]>= 0
+        hwave = hwave[boolean]
+        tlow = 0
+    else:
+        tlow = 1000
+    
+    if tapering: 
+        hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
+        hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
+    
+    times = ut.time_to_t_Phys(hwave[:,0].real,mass)
+    wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
+    tmrg = times[np.argmax(np.abs(wf))]
+    dt = ut.time_to_t_Phys(sampling,mass)
+    start_time = times[0].real
+    
+    if args['pycbc_format']==True :
+        import pycbc
+        from pycbc.types import TimeSeries
+        wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
+        hp, hc = wf.real(), wf.imag()
+    else:
+        hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
+
+    return hp, hc
 
 def sxs_waveform_metadata(**args):
     '''
@@ -370,7 +441,7 @@ def Generate_SXS_Waveform(h5file,modes,extrapolation_order=3,zero_align=True,res
             
         return h_final
     
-def Generate_RIT_Waveform(h5file,modes,zero_align=True,sampling_rate=0.1,modes_combined=True,inclination=0,coa_phase=0,RD=False,toffset=10):
+def Generate_Waveform(h5file,modes,zero_align=True,sampling_rate=0.1,modes_combined=True,inclination=0,coa_phase=0,RD=False,toffset=10):
             
         if modes_combined:
             h=0
