@@ -32,4 +32,5 @@ You can also install from source by cloning the repository at https://github.com
 
 1. SXS, https://data.black-holes.org/waveforms/index.html.
 2. RIT. https://ccrg.rit.edu/content/data/rit-waveform-catalog
-3. Pycbc. https://github.com/gwastro/pycbc
+3. MAYA. https://einstein.gatech.edu/catalog/
+4. Pycbc. https://github.com/gwastro/pycbc
