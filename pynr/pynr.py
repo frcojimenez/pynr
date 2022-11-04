@@ -27,7 +27,7 @@ import numpy as np
 import glob
 import os
 import re
-import jsons
+import json
 import sympy
 import lal
 import h5py
@@ -341,7 +341,7 @@ def sxs_waveform_metadata(**args):
     
     
     with open(json_metafile) as file:
-        metadata = jsons.load(file)
+        metadata = json.load(file)
     
     return metadata
 
@@ -506,6 +506,7 @@ def select_cases(cases,regexp):
         return res
     
 # this function will be used to select the data in terms of the physical parameters
+# this function will be used to select the data in terms of the physical parameters
 def SXS_Catalogue_Select_cases(sxs_root_folder,select_patterns,tolerance=0.001,sortcolumn=2,best_resolution=True,verbose=False):
     '''Function used to select a subdomain of the sxs catalogue stored at sxs_root_folder. 
        Some example select_patterns keywords are [['BHBH',None],['Non-Precessing',None],['Massratio',[>=1,<=10],
@@ -556,7 +557,7 @@ def SXS_Catalogue_Select_cases(sxs_root_folder,select_patterns,tolerance=0.001,s
     metadata = {}
     for i in range(len(json_metafiles)):
         with open(json_metafiles[i]) as file:
-            metadata[tags[i]] = jsons.load(file)
+            metadata[tags[i]] = json.load(file)
     
     print('Found ', len(tags), 'metadata.json files')
     
@@ -782,6 +783,8 @@ def SXS_Catalogue_Select_cases(sxs_root_folder,select_patterns,tolerance=0.001,s
 
         #df = pd.DataFrame(test[:,[0,2,3,6,10]], columns = ['Tag','q',r'$\chi_{eff}$',r'$\chi_{p}$','name'])
         df = pd.DataFrame(test[:,[0,2,3,6,4,5,10]], columns = ['Tag','q',r'$\chi_{eff}$',r'$\chi_{p}$',r'$\chi_{1}$',r'$\chi_{2}$','name'])
+        print(df)
+
     return bh_parameters
     
 def check_type(expr,valtype):
@@ -847,7 +850,7 @@ class SXS_catalogue:
         """Output the metadata for a given json_metafile. To output a reduced set of metadata keywords you need to provide the parameter_list = ['reference_mass1',...] argument."""
         metadata = {}
         with open(json_metafile) as file:
-            metadata = jsons.load(file)
+            metadata = json.load(file)
         
         if len(parameters_list)>0:
             metadata_res=[None]*len(parameters_list)
@@ -906,7 +909,7 @@ class SXS_catalogue:
             metadata = {}
             for i in range(len(json_metafiles)):
                 with open(json_metafiles[i]) as file:
-                    metadata[tags[i]] = jsons.load(file)
+                    metadata[tags[i]] = json.load(file)
         elif self.catalogue == 'RIT':
             metadata = {}
             for i in range(len(json_metafiles)):
