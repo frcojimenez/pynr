@@ -126,7 +126,6 @@ def sxs_waveform(**args):
         h5file=glob.glob(sxs_case+"/"+"rhOverM_Asymptotic_GeometricUnits_CoM.h5", recursive = True)[0]
     
     sampling=ut.time_to_t_NR(delta_t,mass)
-    sxs_init=SXS_catalogue('',[])
     if modes_combined:
         print("Extracting and combining modes");
         hwave = Generate_SXS_Waveform(h5file,modes,extrapolation_order=extrapolation_order,zero_align=zero_align,resample=True,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
