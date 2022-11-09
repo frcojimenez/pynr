@@ -150,46 +150,6 @@ def FFT_ZeroPadded_Windowed(data,nleft=10,nright=10,x_low=-100,sigma_low=50,x_hi
     xf_pos = xf[:np.argmax(xf <0)]
     
     return np.column_stack((xf_pos,ft_pos))
-
-def find_hd5files(tags,sxs_root_folder,catalogue='SXS',export=False,filepath=""):
-        """Find the .json files."""
-        if catalogue == 'SXS':
-            tags0 = tags[0].replace(":","_")
-            rootpath = glob.glob(sxs_root_folder+"/**/"+tags0,recursive = True)[0]
-            path = os.path.dirname(rootpath)
-
-            hd5files = [sorted(glob.glob(path+"/"+x.replace(":","_")+"/**/rhOverM_Asymptotic_GeometricUnits_CoM.h5", recursive = True),reverse=True)[0] for x in tags]
-        elif catalogue == 'RIT':
-            hd5files=find_jsonfiles()
-            hd5files = [(x.split("-id")[0].replace("RIT_BBH_","ExtrapStrain_RIT-BBH-")+'.h5').replace('Metadata','Data') for x in hd5files]
-            
-        if export:
-            textfile = open(filepath, "w")
-            for element in hd5files:
-                   textfile.write(element + "\n")
-            textfile.close()
-            
-        return hd5files
-    
-def find_jsonfiles(tags,sxs_root_folder,catalogue='SXS',export=False,filepath=""):
-        """Find the .json files."""
-        if catalogue == 'SXS':
-            tags0 = tags[0].replace(":","_")
-            rootpath = glob.glob(sxs_root_folder+"/**/"+tags0,recursive = True)[0]
-            path = os.path.dirname(rootpath)
-
-            hd5files = [sorted(glob.glob(path+"/"+x.replace(":","_")+"/**/metadata.json", recursive = True),reverse=True)[0] for x in tags]
-        elif catalogue == 'RIT':
-            hd5files=find_jsonfiles()
-            hd5files = [(x.split("-id")[0].replace("RIT_BBH_","Metadata")+'.json').replace('Metadata','Data') for x in hd5files]
-            
-        if export:
-            textfile = open(filepath, "w")
-            for element in hd5files:
-                   textfile.write(element + "\n")
-            textfile.close()
-            
-        return hd5files
     
 def select_cases(cases,regexp):
         """Select cases find within the list of 'cases' that match the regular expresion 'regexp'."""
