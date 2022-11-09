@@ -17,6 +17,7 @@ setuptools.setup (
     download_url = 'https://github.com/frcojimenez',
     packages=setuptools.find_packages(),
     install_requires=['numpy', 'scipy', 'h5py','glob2','jsons','sympy','lalsuite','sxs','romspline'],
+    package_data={'pynr': ['data/*.json']},
     keywords = ['nr data', 'signal processing', 'gravitational waves'],
     classifiers=[
         'Programming Language :: Python :: 3.6',

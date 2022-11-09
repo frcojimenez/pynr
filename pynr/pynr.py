@@ -38,7 +38,9 @@ import pynr.util as ut
 import matplotlib.pyplot as plt
 
 plt.rcParams['text.usetex'] = True
-
+_this_folder=os.path.dirname(__file__)
+#data_folder=os.path.dirname("/work/francisco.jimenez/local/my_python_modules/pynr/data/sxs_metadata") 
+_data_folder= os.path.join(_this_folder, "data")
 
 def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],[2,-2]],
                 distance=100, inclination=0,coa_phase=0,modes_combined=True,tapering=True,RD=False,
@@ -510,7 +512,32 @@ def select_cases(cases,regexp):
     
 # this function will be used to select the data in terms of the physical parameters
 
-    
+def line_to_dict(split_Line):
+    # Assumes that the first ':' in a line
+    # is always the key:value separator
+    line_dict = {}
+    for part in split_Line:
+        key, value = part[0].replace(" ",""),part[1].replace(" ","")
+        line_dict[key] = value
+
+    return line_dict
+
+def convert_to_json(file,sep=' = '):
+    f = open(file, "r")
+    content = f.read()
+    splitcontent = content.splitlines()
+
+    # Split each line by pipe
+    lines = np.array([line.split(' = ') for line in splitcontent])
+    boolean = np.array([len(i) == 2 for i in lines])
+    lines = list(lines[boolean])
+    # Convert each line to dict
+    #lines = [line_to_dict() for l in lines]
+    lines=line_to_dict(lines)
+    # Output JSON 
+    with open(file.replace("txt","json"), 'w') as fout:
+        json.dump(lines, fout, indent=4)
+    return lines    
 def check_type(expr,valtype):
         """Check if expr is type."""
         return isinstance(expr,valtype)
@@ -535,34 +562,82 @@ def duplicates_pos(test_list):
             result.append(idx)    
     return result
 
-import numpy as np
+def nr_metadata_keys(code,nr_type='BBH'):
+    '''
+    Show the metadata keys of the code. 
+    code = {SXS,RIT}
+    nr_type = {BBH, NSNS,BHNS}
+    '''
+    if code=='SXS':
+        file='sxs_catalog.json'
+    elif code=='RIT':
+        file='rit_catalog.json'
+    elif code=='MAYA':
+        file='maya_catalog.json'
 
-def sxs_catalogue_select(conditions,verbose=False):
+    json_metafile=os.path.join(_data_folder,file)    
+    with open(json_metafile) as file:
+            catalog_json = json.load(file)
+            keys=catalog_json.keys()
+            
+    sublist={}
+    for i in keys:
+        if i.split(":")[-2] == "BBH":
+            sublist[i]=catalog_json[i]
+        elif i.split(":")[-2] == "NSNS":
+            sublist[i]=catalog_json[i]
+        elif i.split(":")[-2] == "BHNS":
+            sublist[i]=catalog_json[i]
+    
+    keys=sublist.keys()
+    r = re.compile(".*"+nr_type+".*")
+    mycase=select_cases(keys,r)[0]
+    
+    return catalog_json[mycase].keys()
+
+def nr_catalogue_select(conditions,verbose=False,code='SXS'):
     import requests_cache
     '''Function used to select a subdomain of the sxs catalogue taking the json data stored at https://arxiv.org/src/1904.04831/anc/sxs_catalog.json. 
-        The conditions are a list composed of a [keyword, range]. The keywords must be consistent with the ones found at the SXS json files :
+        The conditions are a list composed of a [keyword, range]. The keywords must be consistent with the ones found in the catalogue json files : 
+        For SXS:
         [{BBH,NSNS,BHNS},
         ['reference_mass_ratio',[2,4]],
         ['remnant_dimensionless_spin',[0,1]],
         ['reference_chi_eff',[0,0.5]],
         [reference_chi1_perp,[-0.001,0.001]],
         [reference_chi2_perp,[-0.001,0.001]]] 
+        
+        For RIT:
+        [{BBH,NSNS,BHNS},
+        ['relaxed-mass-ratio-1-over-2',[0.3,1]],
+        ['final-chi',[0,1]],
+        ['eccentricity',[0,0.5]]]
+        
+        For MAYA:
+        [{BBH,NSNS,BHNS},
+        ['q:',[1,4]],
+        ['af',[0,1]],
+        ['mf',[0.97,1]]]
     '''
-    
-    session = requests_cache.CachedSession('cached_sxs')
-
-    request = session.get("https://arxiv.org/src/1904.04831/anc/sxs_catalog.json", headers={'accept': 'application/citeproc+json'})
-    sxs_catalog_json = request.json()
-    sxs_keys=sxs_catalog_json.keys()
-
+    if code=='SXS':
+        json_metafile=os.path.join(_data_folder,'sxs_catalog.json')
+    elif code=='RIT':
+        json_metafile=os.path.join(_data_folder,'rit_catalog.json')
+    elif code=='MAYA':
+        json_metafile=os.path.join(_data_folder,'maya_catalog.json')
+            
+    with open(json_metafile) as file:
+            catalog_json = json.load(file)
+            keys=catalog_json.keys()
+        
     sublist={}
-    for i in sxs_keys:
+    for i in keys:
         if i.split(":")[-2] == "BBH":
-            sublist[i]=sxs_catalog_json[i]
+            sublist[i]=catalog_json[i]
         elif i.split(":")[-2] == "NSNS":
-            sublist[i]=sxs_catalog_json[i]
+            sublist[i]=catalog_json[i]
         elif i.split(":")[-2] == "BHNS":
-            sublist[i]=sxs_catalog_json[i]
+            sublist[i]=catalog_json[i]
 
     sublist_keys=sublist.keys()
 
@@ -575,7 +650,7 @@ def sxs_catalogue_select(conditions,verbose=False):
                 else:
                     cond_val=sublist[k][j[0]]
                 try:
-                    if np.logical_and(j[1][0]<=cond_val, j[1][1]>=cond_val):
+                    if np.logical_and(j[1][0]<=float(cond_val), j[1][1]>=float(cond_val)):
                         subsubkeys.append(k)
                 except:
                     None
@@ -588,7 +663,7 @@ def sxs_catalogue_select(conditions,verbose=False):
         pd.set_option('display.width', 1000)
 
         condition_tags=[i[0] for i in conditions[1:]]
-        vals =[[sxs_catalog_json[j][k] for k in condition_tags] for j in sublist_keys]
+        vals =[[catalog_json[j][k] for k in condition_tags] for j in sublist_keys]
         [vals[i].insert(0,sublist_keys[i]) for i in range(len(sublist_keys))]
         pd.set_option('display.max_columns', None)
         df = pd.DataFrame(vals, columns = ['Tag']+condition_tags)
