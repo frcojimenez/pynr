@@ -14,9 +14,9 @@ setuptools.setup (
     author = 'Xisco Jimenez Forteza',
     author_email = 'francisco.jimenez.forteza@aei.mpg.de',
     url = 'https://sites.google.com/view/xiscojimenez/',
-    download_url = 'https://github.com/frcojimenez',
+    download_url = 'https://github.com/frcojimenez/pynr',
     packages=setuptools.find_packages(),
-    install_requires=['numpy', 'scipy', 'h5py','glob2','jsons','sympy','lalsuite','sxs','romspline'],
+    install_requires=['numpy', 'scipy', 'h5py','glob2','jsons','lalsuite','sxs','romspline','requests_cache'],
     package_data={'pynr': ['data/*.json']},
     keywords = ['nr data', 'signal processing', 'gravitational waves'],
     classifiers=[
