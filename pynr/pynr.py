@@ -28,7 +28,6 @@ import glob
 import os
 import re
 import json
-import sympy
 import lal
 import h5py
 from scipy.interpolate import interp1d

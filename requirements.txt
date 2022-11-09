@@ -1,7 +1,6 @@
 numpy
 glob2
 jsons
-sympy
 lalsuite
 h5py
 scipy 
