@@ -27,6 +27,8 @@ You can also install from source by cloning the repository at https://github.com
     RD = True,
     zero_align = True )
 ```
+## License and Citation
+This repository is licensed under MIT public licenses. We encourage the use of the scripts for your own business. If you use the material provided here, please cite it.
 
 ## References
 
