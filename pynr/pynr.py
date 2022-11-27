@@ -674,3 +674,32 @@ def nr_catalogue_select(conditions,verbose=False,code='SXS'):
         print(df)
        
     return sublist_keys
+
+def nr_catalogue_metadata(tag_list,verbose=False,code='SXS'):
+    import requests_cache
+    '''Function used to load the metadata once a tag_list is provided. The tag_list format is:
+    'SXS:BBH:0001', 'RIT:BBH:0226', 'GT:BBH:0355' for SXS RIT and MAYA codes respectively.
+    
+    '''
+    _data_folder='/work/francisco.jimenez/local/my_python_modules/pynr/pynr/data'
+    if code=='SXS':
+        json_metafile=os.path.join(_data_folder,'sxs_catalog.json')
+    elif code=='RIT':
+        json_metafile=os.path.join(_data_folder,'rit_catalog.json')
+    elif code=='MAYA':
+        json_metafile=os.path.join(_data_folder,'maya_catalog.json')
+            
+    with open(json_metafile) as file:
+            catalog_json = json.load(file)
+            keys=catalog_json.keys()
+        
+    sublist={}
+    for i in keys:
+        if i.split(":")[-2] == "BBH":
+            sublist[i]=catalog_json[i]
+        elif i.split(":")[-2] == "NSNS":
+            sublist[i]=catalog_json[i]
+        elif i.split(":")[-2] == "BHNS":
+            sublist[i]=catalog_json[i]
+   
+    return [sublist[i] for i in tag_list]
