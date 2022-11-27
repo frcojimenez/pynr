@@ -1,4 +1,6 @@
 import numpy as np
+import scipy
+from scipy.fft import fft, ifft
     # Functions to convert the nr data to physical units && Fourier transform tools
 c=2.99792458*10**8;G=6.67259*10**(-11);MS=1.9885*10**30;parsec=3.0857*10**(16);Msol=1.9885*(10**30) ;
 ConversionFac=7.4247138240457957979*10**(-28 );

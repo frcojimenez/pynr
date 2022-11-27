@@ -65,7 +65,8 @@ def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],
     delta_t: time sampling. 
     tapering: logical, optional, Default = True. If True it applies a Tanh tappering function at the initial and ending points of the data.
     RD: logical, optional, Default= False. If True it provides the ringdown part.
-    zero_align: logical, optional, Default= True. If True it aligns the waveform such that the peak of the strain is at t=0.   
+    zero_align: logical, optional, Default= True. If True it aligns the waveform such that the peak of the strain is at t=0. 
+    NRUnits: logical, optional, Default=False. If True it provides the output in NR units.
     
     -- Applied for the SXS data.
     extrapolation_order: int, {2,3,4}, Default=2. SXS extrapolation order.
@@ -643,7 +644,7 @@ def nr_catalogue_select(conditions,verbose=False,code='SXS'):
     for j in conditions[1:]:
         subsubkeys=[]
         for k in sublist_keys:
-            if len(j)==2:
+            if len(j[1])==2: 
                 if j[0]=='remnant_dimensionless_spin':
                     cond_val=np.linalg.norm(sublist[k][j[0]])
                 else:
@@ -653,6 +654,10 @@ def nr_catalogue_select(conditions,verbose=False,code='SXS'):
                         subsubkeys.append(k)
                 except:
                     None
+            elif len(j[1])==1: 
+                cond_val=sublist[k][j[0]]
+                if j[1][0]==cond_val:
+                    subsubkeys.append(k)
         sublist_keys=subsubkeys
         
     if verbose:
