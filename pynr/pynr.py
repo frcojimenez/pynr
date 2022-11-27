@@ -38,7 +38,6 @@ import matplotlib.pyplot as plt
 
 plt.rcParams['text.usetex'] = True
 _this_folder=os.path.dirname(__file__)
-#data_folder=os.path.dirname("/work/francisco.jimenez/local/my_python_modules/pynr/data/sxs_metadata") 
 _data_folder= os.path.join(_this_folder, "data")
 
 def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],[2,-2]],
@@ -681,7 +680,6 @@ def nr_catalogue_metadata(tag_list,verbose=False,code='SXS'):
     'SXS:BBH:0001', 'RIT:BBH:0226', 'GT:BBH:0355' for SXS RIT and MAYA codes respectively.
     
     '''
-    _data_folder='/work/francisco.jimenez/local/my_python_modules/pynr/pynr/data'
     if code=='SXS':
         json_metafile=os.path.join(_data_folder,'sxs_catalog.json')
     elif code=='RIT':
