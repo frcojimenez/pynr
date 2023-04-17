@@ -1,4 +1,3 @@
-# Copyright (C) 2021 Xisco Jimenez Forteza
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -42,7 +41,7 @@ _data_folder= os.path.join(_this_folder, "data")
 
 def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],[2,-2]],
                 distance=100, inclination=0,coa_phase=0,modes_combined=True,tapering=True,RD=False,
-                zero_align=True,extrapolation_order=2,resolution_level=-1, **args):
+                zero_align=True,extrapolation_order=2,resolution_level=-1,NRUnits=False,  **args):
     '''
     Function to load the waveforms from the NR catalogues. 
     
@@ -80,22 +79,54 @@ def nr_waveform(download_Q=True,root_folder=None,pycbc_format=True,modes=[[2,2],
     '''
     
     if args['code'] == 'SXS':
-        hp,hc = sxs_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
-                distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
-                zero_align=zero_align,extrapolation_order=extrapolation_order,resolution_level=resolution_level, **args) 
+        sxs_data = sxs_waveform(download_Q=download_Q,
+                                root_folder=root_folder,
+                                pycbc_format=pycbc_format,modes=modes,
+                                distance=distance,
+                                inclination=inclination,
+                                coa_phase=coa_phase,
+                                modes_combined=modes_combined,
+                                tapering=tapering,
+                                RD=RD,
+                                zero_align=zero_align,
+                                extrapolation_order=extrapolation_order,
+                                resolution_level=resolution_level,
+                                NRUnits=NRUnits, **args) 
+        return sxs_data
+    
     elif args['code'] == 'RIT':
-        hp,hc = rit_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
-                distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
-                zero_align=zero_align,**args) 
+        rit_data = rit_waveform(download_Q=download_Q,
+                                root_folder=root_folder,
+                                pycbc_format=pycbc_format,
+                                modes=modes,
+                                distance=distance, 
+                                inclination=inclination,
+                                coa_phase=coa_phase,
+                                modes_combined=modes_combined,
+                                tapering=tapering,
+                                RD=RD,
+                                zero_align=zero_align,
+                                NRUnits=NRUnits,**args) 
+        return rit_data
+
     elif  args['code'] == 'MAYA':
-        hp,hc = maya_waveform(download_Q=download_Q,root_folder=root_folder,pycbc_format=pycbc_format,modes=modes,
-                distance=distance, inclination=inclination,coa_phase=coa_phase,modes_combined=modes_combined,tapering=tapering,RD=RD,
-                zero_align=zero_align,**args) 
+        maya_data = maya_waveform(download_Q=download_Q,
+                                  root_folder=root_folder,
+                                  pycbc_format=pycbc_format,
+                                  modes=modes,
+                                  distance=distance, 
+                                  inclination=inclination,
+                                  coa_phase=coa_phase,
+                                  modes_combined=modes_combined,
+                                  tapering=tapering,
+                                  RD=RD,
+                                  zero_align=zero_align,
+                                  NRUnits=NRUnits,**args)
+        return maya_data
+    
     else:
         print('Catalogue not recognised')
         return
-    
-    return hp,hc
     
 def sxs_waveform(**args):
     
@@ -112,6 +143,7 @@ def sxs_waveform(**args):
     tapering = args['tapering']
     RD = args['RD']
     zero_align = args['zero_align']    
+    
     if download_Q:
         home=os.path.expanduser('~')
         resolution_level = args['resolution_level']
@@ -120,48 +152,88 @@ def sxs_waveform(**args):
     
     else:
         sxs_root_folder = args['root_folder']   
-        sxs_resolutions = sorted(glob.glob(sxs_root_folder+"/"+sxs_tag.replace(":","_")+"/*"))
+        sxs_resolutions = sorted(glob.glob(sxs_root_folder+"/"+sxs_tag.replace(":","_")+"/**/rhOverM_Asymptotic_GeometricUnits_CoM.h5"))
         res_length = len(sxs_resolutions)
         resolution_level = args['resolution_level']
-        sxs_case = sxs_resolutions[resolution_level]
-        h5file=glob.glob(sxs_case+"/"+"rhOverM_Asymptotic_GeometricUnits_CoM.h5", recursive = True)[0]
-    
+        h5file = sxs_resolutions[resolution_level]
+        
     sampling=ut.time_to_t_NR(delta_t,mass)
+    
     if modes_combined:
         print("Extracting and combining modes");
-        hwave = Generate_SXS_Waveform(h5file,modes,extrapolation_order=extrapolation_order,zero_align=zero_align,resample=True,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
-    else:
-        hwave = Generate_SXS_Waveform(h5file,modes,extrapolation_order=extrapolation_order,zero_align=zero_align,resample=True,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)[0]
+        hwave = Generate_SXS_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
+        if RD:
+            boolean = hwave[:,0]>= 0
+            hwave = hwave[boolean]
+            tlow = 0
+        else:
+            tlow = 1000
     
-    if RD:
-        boolean = hwave[:,0]>= 0
-        hwave = hwave[boolean]
-        tlow = 0
-    else:
-        tlow = 1000
-    
-    if tapering: 
-        hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
-        hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
-    
-    times = ut.time_to_t_Phys(hwave[:,0].real,mass)
-    wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
-    tmrg = times[np.argmax(np.abs(wf))]
-    
+        if tapering: 
+            hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
+            hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
 
-    dt = ut.time_to_t_Phys(sampling,mass)
-    start_time = times[0].real
+        if args['NRUnits']:
+            times = hwave[:,0].real
+            wf = hwave[:,1]
+            tmrg = times[np.argmax(np.abs(wf))]
+            dt = sampling
+            start_time = times[0].real
+        else:
+            times = ut.time_to_t_Phys(hwave[:,0].real,mass)
+            wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
+            tmrg = times[np.argmax(np.abs(wf))]
+            dt = times[1]-times[0]
+            start_time = times[0]
     
-    if args['pycbc_format']==True :
-        import pycbc
-        from pycbc.types import TimeSeries
-        wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
-        hp, hc = wf.real(), wf.imag()
-    else:
-        hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
+        if args['pycbc_format']==True and (args['NRUnits'] == False):
+            import pycbc
+            from pycbc.types import TimeSeries
+            wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
+            hp, hc = wf.real(), wf.imag()
+        else:
+            hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
 
-    return hp, hc
-    
+        return hp, hc
+
+    else:
+        hwave = Generate_SXS_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
+        hwave_all=[]
+        for hmode in hwave:
+            if RD:
+                boolean = hmode[:,0]>= 0
+                hmode = hmode[boolean]
+                tlow = 0
+            else:
+                tlow = 1000
+
+            if tapering: 
+                hmode = ut.Window_Tanh(hmode,hmode[0,0]+tlow,100,150,100)
+                hmode = ut.ZeroPadTimeSeries(hmode,10000,1000)    
+
+            if args['NRUnits']:
+                times = hmode[:,0].real
+                wf = hmode[:,1]
+                tmrg = times[np.argmax(np.abs(wf))]
+                dt = sampling
+                start_time = times[0].real
+            else:
+                times = ut.time_to_t_Phys(hmode[:,0].real,mass)
+                wf = ut.amp_to_phys(hmode[:,1],mass,distance,apply_spherical_harmonic=False)
+                tmrg = times[np.argmax(np.abs(wf))]
+                dt = times[1]-times[0]
+                start_time = times[0]
+
+            if args['pycbc_format']==True:# and (args['NRUnits'] == False):
+                import pycbc
+                from pycbc.types import TimeSeries
+                wf = TimeSeries(wf,delta_t=dt,epoch=start_time) 
+                hwave_all.append(wf)
+            else:    
+                hwave_all.append(np.stack((times.real,wf)).T)
+
+        return np.array(hwave_all)
+
 
 def rit_waveform(**args):
     
@@ -210,39 +282,81 @@ def rit_waveform(**args):
         h5file=rit_case
     
     sampling=ut.time_to_t_NR(delta_t,mass)
+    
     if modes_combined:
         print("Extracting and combining modes");
         hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
-    else:
-        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)[0]
+        if RD:
+            boolean = hwave[:,0]>= 0
+            hwave = hwave[boolean]
+            tlow = 0
+        else:
+            tlow = 1000
     
-    if RD:
-        boolean = hwave[:,0]>= 0
-        hwave = hwave[boolean]
-        tlow = 0
-    else:
-        tlow = 1000
-    
-    if tapering: 
-        hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
-        hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
-    
-    times = ut.time_to_t_Phys(hwave[:,0].real,mass)
-    wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
-    tmrg = times[np.argmax(np.abs(wf))]
-    dt = ut.time_to_t_Phys(sampling,mass)
-    start_time = times[0].real
-    
-    if args['pycbc_format']==True :
-        import pycbc
-        from pycbc.types import TimeSeries
-        wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
-        hp, hc = wf.real(), wf.imag()
-    else:
-        hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
+        if tapering: 
+            hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
+            hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
 
-    return hp, hc
+        if args['NRUnits']:
+            times = hwave[:,0].real
+            wf = hwave[:,1]
+            tmrg = times[np.argmax(np.abs(wf))]
+            dt = sampling
+            start_time = times[0].real
+        else:
+            times = ut.time_to_t_Phys(hwave[:,0].real,mass)
+            wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
+            tmrg = times[np.argmax(np.abs(wf))]
+            dt = times[1]-times[0]
+            start_time = times[0]
+    
+        if args['pycbc_format']==True and (args['NRUnits'] == False):
+            import pycbc
+            from pycbc.types import TimeSeries
+            wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
+            hp, hc = wf.real(), wf.imag()
+        else:
+            hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
 
+        return hp, hc
+
+    else:
+        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
+        hwave_all=[]
+        for hmode in hwave:
+            if RD:
+                boolean = hmode[:,0]>= 0
+                hmode = hmode[boolean]
+                tlow = 0
+            else:
+                tlow = 1000
+
+            if tapering: 
+                hmode = ut.Window_Tanh(hmode,hmode[0,0]+tlow,100,150,100)
+                hmode = ut.ZeroPadTimeSeries(hmode,10000,1000)    
+
+            if args['NRUnits']:
+                times = hmode[:,0].real
+                wf = hmode[:,1]
+                tmrg = times[np.argmax(np.abs(wf))]
+                dt = sampling
+                start_time = times[0].real
+            else:
+                times = ut.time_to_t_Phys(hmode[:,0].real,mass)
+                wf = ut.amp_to_phys(hmode[:,1],mass,distance,apply_spherical_harmonic=False)
+                tmrg = times[np.argmax(np.abs(wf))]
+                dt = times[1]-times[0]
+                start_time = times[0]
+
+            if args['pycbc_format']==True and (args['NRUnits'] == False):
+                import pycbc
+                from pycbc.types import TimeSeries
+                wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
+            hwave_all.append(np.stack((times.real,wf)).T)
+
+        return np.array(hwave_all)
+    
+    
 
 def maya_waveform(**args):
     
@@ -278,44 +392,85 @@ def maya_waveform(**args):
 
     else:
         maya_root_folder = args['root_folder']   
-        maya_resolutions = sorted(glob.glob(maya_resolutions+"/*"+maya_tag.replace(":","-")+"*"))
+        maya_resolutions = sorted(glob.glob(maya_root_folder+"/*"+maya_tag.replace(":","-")+"*"))
         maya_case = maya_resolutions[-1]
         h5file=maya_case
     
     sampling=ut.time_to_t_NR(delta_t,mass)
+    
     if modes_combined:
         print("Extracting and combining modes");
         hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
-    else:
-        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)[0]
+        if RD:
+            boolean = hwave[:,0]>= 0
+            hwave = hwave[boolean]
+            tlow = 0
+        else:
+            tlow = 1000
     
-    if RD:
-        boolean = hwave[:,0]>= 0
-        hwave = hwave[boolean]
-        tlow = 0
-    else:
-        tlow = 1000
-    
-    if tapering: 
-        hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
-        hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
-    
-    times = ut.time_to_t_Phys(hwave[:,0].real,mass)
-    wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
-    tmrg = times[np.argmax(np.abs(wf))]
-    dt = ut.time_to_t_Phys(sampling,mass)
-    start_time = times[0].real
-    
-    if args['pycbc_format']==True :
-        import pycbc
-        from pycbc.types import TimeSeries
-        wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
-        hp, hc = wf.real(), wf.imag()
-    else:
-        hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
+        if tapering: 
+            hwave = ut.Window_Tanh(hwave,hwave[0,0]+tlow,100,150,100)
+            hwave = ut.ZeroPadTimeSeries(hwave,10000,1000)    
 
-    return hp, hc
+        if args['NRUnits']:
+            times = hwave[:,0].real
+            wf = hwave[:,1]
+            tmrg = times[np.argmax(np.abs(wf))]
+            dt = sampling
+            start_time = times[0].real
+        else:
+            times = ut.time_to_t_Phys(hwave[:,0].real,mass)
+            wf = ut.amp_to_phys(hwave[:,1],mass,distance,apply_spherical_harmonic=False)
+            tmrg = times[np.argmax(np.abs(wf))]
+            dt = times[1]-times[0]
+            start_time = times[0]
+    
+        if args['pycbc_format']==True and (args['NRUnits'] == False):
+            import pycbc
+            from pycbc.types import TimeSeries
+            wf = TimeSeries(wf, delta_t=dt,epoch=start_time)    
+            hp, hc = wf.real(), wf.imag()
+        else:
+            hp, hc =  np.stack((times,wf.real)).T, np.stack((times,wf.imag)).T
 
+        return hp, hc
+    
+    else:
+        hwave = Generate_Waveform(h5file,modes,zero_align=zero_align,sampling_rate=sampling,modes_combined=modes_combined,inclination=inclination,coa_phase=coa_phase)
+        hwave_all=[]
+        for hmode in hwave:
+            if RD:
+                boolean = hmode[:,0]>= 0
+                hmode = hmode[boolean]
+                tlow = 0
+            else:
+                tlow = 1000
+    
+            if tapering: 
+                hmode = ut.Window_Tanh(hmode,hmode[0,0]+tlow,100,150,100)
+                hmode = ut.ZeroPadTimeSeries(hmode,10000,1000)    
+
+            if args['NRUnits']:
+                times = hmode[:,0].real
+                wf = hmode[:,1]
+                tmrg = times[np.argmax(np.abs(wf))]
+                dt = sampling
+                start_time = times[0].real
+            else:
+                times = ut.time_to_t_Phys(hmode[:,0].real,mass)
+                wf = ut.amp_to_phys(hmode[:,1],mass,distance,apply_spherical_harmonic=False)
+                tmrg = times[np.argmax(np.abs(wf))]
+                dt = times[1]-times[0]
+                start_time = times[0]
+
+            if args['pycbc_format']==True and (args['NRUnits'] == False):
+                import pycbc
+                from pycbc.types import TimeSeries
+                wf = TimeSeries(wf, delta_t=dt,epoch=start_time)  
+            hwave_all.append(np.stack((times.real,wf)).T)
+
+        return np.array(hwave_all)  
+    
 def sxs_waveform_metadata(**args):
     '''
     Function to find and load the SXS NR strain waveforms. 
@@ -679,6 +834,8 @@ def nr_catalogue_metadata(tag_list,verbose=False,code='SXS'):
     '''Function used to load the metadata once a tag_list is provided. The tag_list format is:
     'SXS:BBH:0001', 'RIT:BBH:0226', 'GT:BBH:0355' for SXS RIT and MAYA codes respectively.
     
+    If tag_list = [], it will return the whole metadata.
+    
     '''
     if code=='SXS':
         json_metafile=os.path.join(_data_folder,'sxs_catalog.json')
@@ -699,5 +856,9 @@ def nr_catalogue_metadata(tag_list,verbose=False,code='SXS'):
             sublist[i]=catalog_json[i]
         elif i.split(":")[-2] == "BHNS":
             sublist[i]=catalog_json[i]
-   
-    return [sublist[i] for i in tag_list]
+    
+    if len(tag_list)==0:
+        return sublist
+    else:
+        return [sublist[i] for i in tag_list]
+
